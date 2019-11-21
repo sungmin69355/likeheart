@@ -1,0 +1,37 @@
+
+{% if user.is_authenticated %}
+
+{{ user.username }} 님
+
+    <form id="logout" method="POST" action="{% url 'logout' %}">
+        {% csrf_token %} 
+        <input type="submit" value="로그아웃">
+    </form>
+
+<a href="{% url 'new' %}">글쓰기</a>
+
+{% else %}
+
+로그인 해주세요
+<a href="{% url 'login' %}">로긴</a>
+<a href="{% url 'signup' %}">횐갑</a>
+
+{% endif %}
+
+<form action="{% url 'search' %}" method="get">
+  <input type="text" name="q" value="{{ q }}">
+  <input type="submit" value="검색">
+</form>
+
+{% for post in posts.all %}
+        <div class="container">
+            <h1>제목 : {{ post.title }}</h1>
+            
+            <p>작성자 : {{ post.name }}</p>
+            
+            <p>시간 : {{ post.pub_date }}</p>
+            <p>본문 : {{ post.summary }}</p>
+            <p>좋아요 : <small class="text-muted"><span class="like_count" id="count{{ post.id }}">{{ post.total_likes }} like</span></small></p>
+            <a href="{% url 'detail' post.id %}">자세히보기</a>
+        </div>
+{% endfor %}

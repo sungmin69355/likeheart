@@ -1,0 +1,140 @@
+<style>
+  .hidden {
+    display: none
+  }
+</style>
+  
+
+<p>현재 접속자 : <span id="user_name">{{ user.username }}</span>님 환영합니다.</p>
+
+
+
+<h1>디테일 입니다.</h1>
+
+{% if messages %}
+{% for message in messages %}
+{{message.message}}<br>
+{% endfor %}
+{% endif %}
+
+<h1>{{ post.title }}</h1>
+<p>작성자 : <span class="writer_name">{{ post.name }}</span></p>
+
+<p>{{ post.pub_date }}</p>
+
+{% if post.images %}
+<img width="50%" style="height: 50%" src="{{ post.images.url }}" >
+{% else %}
+이미지가 없습니다.
+{% endif %}
+<br>
+
+
+<p>{{ post.body }}</p>
+
+<span class="hidden" id="control_id">
+<a href="{% url 'delete' post.pk %}"><img src="/static/delete.png" class="delete" alt="삭제" style="width: 1.2rem; height:1.2rem;"></a> 
+<a href="{% url 'edit' post.pk %}"><img src="/static/edit.png" class="edit" alt="수정" style="width: 1.2rem; height:1.2rem;"></a>
+</span>
+
+<br>
+<span class="like_button">
+    {% if post.likes.all %}
+      <a class="like" name="{{ post.id }}"><img id="like-img{{ post.id }}" src="/static/like_after.png" alt="클릭시 좋아요 취소" style="width: 2rem; height:2rem;"></a>
+    {% else %}
+      <a class="like" name="{{ post.id }}"><img id="like-img{{ post.id }}" src="/static/like_before.png" alt="클릭시 좋아요" style="width: 2rem; height:2rem;"></a>
+    {% endif %}
+  <small class="text-muted"><span class="like_count" id="count{{ post.id }}">{{ post.total_likes }} like</span></small>
+</span>
+
+
+<form class="form-inline my-2 my-lg-0" action="{% url 'comment_write' post.pk %}" method="POST">
+
+    {% csrf_token %}
+
+    <input class="form-control mr-sm-2" type="text" placeholder="댓글달아주세요" name="content" >
+
+    <button class="btn btn-outline-success my-2 my-sm-0" type="submit" value="Write">Write</button>
+
+</form>
+
+ 
+
+{% for comment in post.comments.all %}
+
+<a><span class="comment_writer_name">{{comment.comment_writer}}</span></a>
+
+<a>{{comment.comment_date}}</a><br>
+
+<a class="card-text">{{comment.comment_contents}}</a><br>
+
+<span class="control hidden" id="control_id1{{ forloop.counter0 }}">
+<a href="{% url 'comment_delete' post.pk comment.pk %}"><img src="/static/delete.png" class="delete" alt="삭제" style="width: 1.2rem; height:1.2rem;"></a>
+</span>
+
+<br>
+
+{% empty %}
+
+<p class="card-text">댓글이 없습니다.</p>
+
+{% endfor %}
+
+
+<a href="{% url 'home' %}">홈으로</a>
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+$("#user_name").text() 
+$(".writer_name").text() 
+
+if ($("#user_name").text() == $(".writer_name").text()) {
+  $("#control_id").removeClass("hidden")
+}
+
+// 좋아요 버튼 처리
+// 버튼 클릭 > ajax통신 (like url로 전달) > views의 like 메소드에서 리턴하는 값 전달받기 > 성공시 콜백 호출
+$('.like').click(function(){
+  var pk = $(this).attr('name') // 클릭한 요소의 attribute 중 name의 값을 가져온다.
+  $.ajax({
+      type: "POST", // 데이터를 전송하는 방법을 지정한다.
+      url: "{% url 'like' %}", // 통신할 url을 지정한다.
+      data: {'pk': pk, 'csrfmiddlewaretoken': '{{ csrf_token }}'}, // 서버로 데이터를 전송할 때 이 옵션을 사용한다.
+      dataType: "json", // 서버측에서 전송한 데이터를 어떤 형식의 데이터로서 해석할 것인가를 지정한다. 없으면 알아서 판단한다.
+      // 서버측에서 전송한 데이터 views.py like 메소드
+      // context = {'likes_count' : memo.total_likes, 'message' : message}
+      // json.dump(context)를 통해서 json 형식으로 전달된다.
+
+      success: function (response) { 
+          if (response.likes_count == 1) {
+            $('#count' + pk).html(response.likes_count + ' like ');
+            $('#like-img'+pk).attr('src','/static/like_after.png');
+          } else if (response.likes_count == 0) {
+            $('#count' + pk).html('0 like');
+            $('#like-img'+pk).attr('src','/static/like_before.png');
+          } else {
+            $('#count' + pk).html(response.likes_count + ' like');
+            $('#like-img'+pk).attr('src','/static/like_after.png');
+          }
+          alert(response.message);
+        },
+        error: function (request, status, error) {
+          alert('로그인이 필요합니다.')
+        }
+      });
+    })
+
+
+    $(".comment_writer_name") 
+    $(".comment_writer_name")[0].innerHTML  
+
+    for (i = 0; i < $(".comment_writer_name").length; i++) {
+      if ($("#user_name").text() == $(".comment_writer_name")[i].innerHTML) {
+        $("#control_id1" + i).removeClass("hidden");
+      }
+    }
+    
+</script>
